@@ -1,14 +1,15 @@
 var Service, Characteristic;
 var http = require("http");
+var sent = Date.now() - 2000;
 
 module.exports = function (homebridge) {
 	Service = homebridge.hap.Service;
 	Characteristic = homebridge.hap.Characteristic;
-	homebridge.registerAccessory("homebridge-irkit", "IRKit", IRKitAccessory);
+	homebridge.registerAccessory("homebridge-irkit-ext", "IRKitExt", IRKitAccessoryExt);
 }
 
 
-function IRKitAccessory(log, config) {
+function IRKitAccessoryExt(log, config) {
 	this.log = log;
 
 	// url info
@@ -18,27 +19,32 @@ function IRKitAccessory(log, config) {
 	this.name = config["name"];
 }
 
-IRKitAccessory.prototype = {
+IRKitAccessoryExt.prototype = {
 
 	httpRequest: function (host, form, callback) {
-		var formData = JSON.stringify(form);
-		var req = http.request({
-			host: host,
-			path: "/messages",
-			method: "POST",
-			headers: {
-				"X-Requested-With": "homebridge-irkit",
-				"Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
-				"Content-Length": formData.length
-			}
-		}, function (response) {
-			callback(response);
-		});
-		req.on('error', function (response) {
-			callback(response);
-		});
-		req.write(formData);
-		req.end();
+		if(sent - Date.now() > 2000) {
+			var formData = JSON.stringify(form);
+			var req = http.request({
+				host: host,
+				path: "/messages",
+				method: "POST",
+				headers: {
+					"X-Requested-With": "homebridge-irkit-ext",
+					"Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
+					"Content-Length": formData.length
+				}
+			}, function (response) {
+				callback(response);
+			});
+			req.on('error', function (response) {
+				callback(response);
+			});
+			req.write(formData);
+			req.end();
+		} else {
+			setTimeout(httpRequest, 500);
+		}
+
 	},
 
 	setPowerState: function (powerOn, callback) {
