@@ -17,12 +17,15 @@ function IRKitAccessoryExt(log, config) {
 	this.on_form = config["on_form"];
 	this.off_form = config["off_form"];
 	this.name = config["name"];
+	this.log("instantiated:" + sent)
 }
 
 IRKitAccessoryExt.prototype = {
 
 	httpRequest: function (host, form, callback) {
-		if(sent - Date.now() > 2000) {
+		var delay = Date.now() - sent;
+		if(delay > 2000) {
+			sent = Date.now();
 			var formData = JSON.stringify(form);
 			var req = http.request({
 				host: host,
@@ -42,7 +45,8 @@ IRKitAccessoryExt.prototype = {
 			req.write(formData);
 			req.end();
 		} else {
-			setTimeout(httpRequest, 500);
+			// this.log("too early:" + delay);
+			setTimeout(arguments.callee, 500, host, form, callback);
 		}
 
 	},
